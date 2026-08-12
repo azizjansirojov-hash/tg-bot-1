@@ -57,8 +57,16 @@ async def handle_movie_code(message: Message, session: AsyncSession) -> None:
     caption = movie.title if movie.title else None
     await release_session(session)
 
+    bot = message.bot
+    if bot is None:
+        logger.error(
+            "message.bot is None; cannot deliver video user_id=%s",
+            user_id,
+        )
+        return
+
     sent = await safe_send_video(
-        message.bot,
+        bot,
         message.chat.id,
         file_id,
         caption=caption,
