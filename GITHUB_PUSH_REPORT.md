@@ -45,7 +45,7 @@
 |------|---------|
 | `fd8700b` | `Initial commit` (pre-existing; README only) |
 | `47a43c4` | `feat: ship production Telegram movie-code bot with security hardening and CI` |
-| *(this report)* | `docs: add GITHUB_PUSH_REPORT for safe first push` (follow-up commit) |
+| `094527e` | `docs: add GITHUB_PUSH_REPORT for safe first push` |
 
 Push result: `fd8700b..47a43c4  main -> main` (non-force).
 
