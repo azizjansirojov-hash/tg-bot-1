@@ -49,6 +49,7 @@ async def upsert_movie(
             },
         )
         .returning(Movie)
+        .execution_options(populate_existing=True)
     )
     result = await session.execute(stmt)
     movie = result.scalar_one()
@@ -121,6 +122,7 @@ async def upsert_user_activity(session: AsyncSession, telegram_id: int) -> User:
             },
         )
         .returning(User)
+        .execution_options(populate_existing=True)
     )
     result = await session.execute(stmt)
     user = result.scalar_one()
