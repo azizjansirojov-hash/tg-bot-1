@@ -1,0 +1,12 @@
+# Top-level runtime dependencies. Compile with Python 3.11:
+#   docker run --rm -v "%CD%":/app -w /app python:3.11-slim bash -c \
+#     "pip install -q pip-tools && pip-compile --generate-hashes -o requirements.txt requirements.in"
+aiogram==3.30.0
+SQLAlchemy[asyncio]==2.0.51
+asyncpg==0.31.0
+alembic==1.18.5
+pydantic-settings==2.14.2
+pydantic==2.12.5
+aiohttp==3.13.3
+greenlet==3.3.1
+redis==5.2.1

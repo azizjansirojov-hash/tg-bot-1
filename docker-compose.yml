@@ -1,0 +1,51 @@
+# Local development stack.
+# Default Postgres credentials (postgres/postgres) are for LOCAL DEV ONLY.
+# Change them (and DATABASE_URL) for any shared or non-local environment.
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: tgbot
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d tgbot"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Optional: enable for multi-replica / Redis FSM + rate-limit testing.
+  # Then set USE_REDIS=true and REDIS_URL=redis://redis:6379/0 on the bot service.
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  bot:
+    build: .
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/tgbot
+      BOT_MODE: polling
+      # Uncomment to exercise Redis-backed FSM + rate limits locally:
+      # USE_REDIS: "true"
+      # REDIS_URL: redis://redis:6379/0
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  pgdata:
