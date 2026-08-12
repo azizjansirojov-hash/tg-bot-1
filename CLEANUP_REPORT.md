@@ -101,8 +101,8 @@ Nothing else unexpectedly missing. Left **untracked** (not part of this commit):
 
 | | |
 |--|--|
-| **Hash** | `8954c790111744c479661cf626e7c42b4b4a0af3` (`8954c79`) |
+| **Hash** | `af3e707b2d958cf42b93fad37a611e4b276028c5` (`af3e707`) |
 | **Message** | `chore: remove debug instrumentation, fix ruff/mypy findings from verification pass` |
 | **Pushed?** | **No — local commit only. Not pushed.** |
 
-Note: this report file was included in that commit; the hash above is that commit’s full SHA (verified via `git log -1` after commit).
+The hash above is the cleanup commit (`git log -1` after amend). A follow-up docs commit may only refresh this hash line if the amend SHA changed.
