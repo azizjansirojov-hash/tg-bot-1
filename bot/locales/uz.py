@@ -35,6 +35,28 @@ class Texts:
         "qayta urinib ko‘ring."
     )
 
+    # --- Help / command menu ---
+    HELP_HEADER = "<b>Buyruqlar</b>"
+    HELP_ADMIN_HEADER = "<b>Admin buyruqlari</b>"
+    CMD_START_DESC = "Bot haqida qisqacha ma’lumot"
+    CMD_HELP_DESC = "Mavjud buyruqlar ro‘yxati"
+    CMD_LIST_CODES_DESC = "Saqlangan kodlar ro‘yxati"
+    CMD_DELETE_CODE_DESC = "Kodni o‘chirish"
+    CMD_STATS_DESC = "Statistika"
+    CMD_AUDITLOG_DESC = "Admin audit jurnali"
+    CMD_CANCEL_DESC = "Joriy admin amalini bekor qilish"
+    CMD_LANGUAGE_DESC = "Tilni o‘zgartirish"
+    CMD_BROADCAST_DESC = "Barcha foydalanuvchilarga xabar yuborish"
+
+    LANGUAGE_CHOICE = "Tilni tanlang:"
+    LANGUAGE_UPDATED = "Til o‘zbekchaga o‘zgartirildi."
+    START_LANGUAGE_PROMPT = (
+        "Tilni tanlang / Выберите язык / Choose a language:"
+    )
+    BTN_LANG_UZ = "O‘zbekcha"
+    BTN_LANG_RU = "Русский"
+    BTN_LANG_EN = "English"
+
     # --- Admin: add-movie FSM ---
     ADMIN_VIDEO_RECEIVED = (
         "Video ombor kanalidan qabul qilindi.\n\n"
@@ -146,6 +168,31 @@ class Texts:
     BTN_DELETE_NO = "Yo‘q, bekor"
     BTN_SAVE_YES = "Ha, saqlash"
     BTN_SAVE_NO = "Yo‘q, bekor"
+    BTN_BROADCAST_YES = "Ha, yuborilsin"
+    BTN_BROADCAST_NO = "Yo‘q, bekor"
+
+    # --- Admin: broadcast ---
+    ADMIN_BROADCAST_ASK = (
+        "Yuboriladigan matnni yuboring (faqat oddiy matn).\n"
+        "Bekor qilish: /cancel"
+    )
+    ADMIN_BROADCAST_EMPTY = "Yuborish uchun faol foydalanuvchi yo‘q."
+    ADMIN_BROADCAST_CONFIRM = (
+        "Bu xabar <b>{count}</b> ta foydalanuvchiga yuboriladi. Tasdiqlaysizmi?"
+    )
+    ADMIN_BROADCAST_CANCELLED = "Yuborish bekor qilindi. Hech kimga xabar ketmadi."
+    ADMIN_BROADCAST_TEXT_TOO_LONG = (
+        "Matn juda uzun (maksimum {max_len} belgi). Qisqaroq yuboring."
+    )
+    ADMIN_BROADCAST_NEED_TEXT = "Iltimos, matn yuboring (bo‘sh xabar emas)."
+    ADMIN_BROADCAST_SUMMARY = (
+        "📣 <b>Yuborish yakunlandi</b>\n\n"
+        "Urinish: <b>{attempted}</b>\n"
+        "Muvaffaqiyatli: <b>{succeeded}</b>\n"
+        "Bloklangan: <b>{failed_blocked}</b>\n"
+        "Boshqa xato: <b>{failed_other}</b>\n"
+        "Davomiyligi: <b>{duration_ms}</b> ms"
+    )
 
 
 TEXTS = Texts()

@@ -105,6 +105,14 @@ class Settings(BaseSettings):
         default="redis://localhost:6379/0",
         validation_alias="REDIS_URL",
     )
+    # Explicit replica count: >1 without Redis fails fast (split FSM / limits).
+    bot_replica_count: int = Field(default=1, validation_alias="BOT_REPLICA_COUNT")
+
+    # How often an admin may invoke /broadcast (confirm callbacks are not limited).
+    broadcast_cooldown_seconds: int = Field(
+        default=300,
+        validation_alias="BROADCAST_COOLDOWN_SECONDS",
+    )
 
     _admin_ids: list[int] = PrivateAttr(default_factory=list)
 
@@ -125,6 +133,14 @@ class Settings(BaseSettings):
     def validate_redis_config(self) -> Settings:
         if self.use_redis and not self.redis_url:
             raise ValueError("USE_REDIS=true requires REDIS_URL to be set")
+        if self.bot_replica_count < 1:
+            raise ValueError("BOT_REPLICA_COUNT must be >= 1")
+        if self.bot_replica_count > 1 and not self.use_redis:
+            raise ValueError(
+                "BOT_REPLICA_COUNT>1 requires USE_REDIS=true and REDIS_URL; "
+                "in-memory FSM storage and rate limits are per-process and "
+                "will be inconsistent across replicas"
+            )
         return self
 
     @property
@@ -176,6 +192,12 @@ class Settings(BaseSettings):
             raise ValueError(
                 "Webhook mode requires these environment variables: "
                 + ", ".join(missing)
+            )
+        assert self.webhook_url is not None
+        if not self.webhook_url.lower().startswith("https://"):
+            raise ValueError(
+                "WEBHOOK_URL must start with https:// "
+                f"(got {self.webhook_url!r})"
             )
         # webhook_secret is guaranteed non-empty here.
         self._validate_webhook_secret_value(self.webhook_secret)  # type: ignore[arg-type]

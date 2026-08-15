@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import BigInteger, DateTime, Integer, String, Text, func
+from sqlalchemy import BigInteger, Boolean, DateTime, Integer, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from bot.db.base import Base
@@ -51,6 +51,18 @@ class User(Base):
         nullable=False,
     )
     request_count: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    language_code: Mapped[str] = mapped_column(
+        String(8),
+        nullable=False,
+        default="uz",
+        server_default="uz",
+    )
+    is_active: Mapped[bool] = mapped_column(
+        Boolean,
+        default=True,
+        server_default="true",
+        nullable=False,
+    )
 
     def __repr__(self) -> str:
         return f"<User telegram_id={self.telegram_id} requests={self.request_count}>"

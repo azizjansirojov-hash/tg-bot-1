@@ -12,3 +12,9 @@ CODE_RE = re.compile(rf"^\d{{1,{CODE_MAX_LEN}}}$")
 
 # Max length for movie titles (matches movies.title String(255)).
 TITLE_MAX_LEN = 255
+
+# Telegram sendMessage text limit.
+BROADCAST_TEXT_MAX_LEN = 4096
+
+# Outbound broadcast pace (messages to distinct chats per second).
+BROADCAST_SENDS_PER_SECOND = 25

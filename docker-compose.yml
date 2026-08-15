@@ -1,6 +1,16 @@
-# Local development stack.
-# Default Postgres credentials (postgres/postgres) are for LOCAL DEV ONLY.
-# Change them (and DATABASE_URL) for any shared or non-local environment.
+# =============================================================================
+# LOCAL DEVELOPMENT ONLY — do not use this file as-is in production.
+#
+# This compose stack publishes Postgres (5432) and Redis (6379) on the host
+# and uses default credentials (postgres/postgres). That is convenient for
+# local work and dangerous on a public host: anyone who can reach those ports
+# can access the database with the default password.
+#
+# Production deployments MUST:
+#   - not publish database/Redis ports to the public internet
+#   - set strong, unique credentials (never these defaults)
+#   - not run this compose file unmodified on a shared or public machine
+# =============================================================================
 services:
   db:
     image: postgres:16-alpine

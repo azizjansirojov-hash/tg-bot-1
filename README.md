@@ -13,10 +13,12 @@ pydantic-settings. Optional Redis for multi-replica FSM + rate limits.
 ## Features
 
 - `/start` welcome + numeric code lookup → `send_video` (plain-text captions)
+- `/help` (role-aware) and Telegram `/` command menu via `set_my_commands`
+- `/language` — Uzbek (default) or English, stored per user
 - Friendly guidance for non-numeric messages
-- Dual-layer per-user rate limiting (code lookup + global ceiling)
+- Dual-layer per-user rate limiting (code lookup + global ceiling) plus `/broadcast` cooldown
 - Admin flow: forward a video from the storage channel → FSM asks for code & title
-- `/list_codes`, `/delete_code`, `/stats`, `/auditlog`, `/cancel` for admins
+- `/list_codes`, `/delete_code`, `/stats`, `/auditlog`, `/broadcast`, `/cancel` for admins
 - Polling mode (local) and webhook mode (Railway / Render)
 - Optional Redis-backed FSM + rate limits (`USE_REDIS=true`)
 
@@ -43,9 +45,11 @@ python -m venv .venv
 # Linux / macOS
 source .venv/bin/activate
 
-pip install -r requirements.txt
+pip install --require-hashes -r requirements.txt
 pip install -r requirements-dev.txt   # for tests / lint
 ```
+
+After `git pull`, re-run those two install commands so the venv matches the lockfile (CI already installs from hashes before tests).
 
 ### 3. Configure environment
 
@@ -113,8 +117,10 @@ Telegram and send `/start`.
 | `DB_MAX_OVERFLOW` | no | `10` | |
 | `DB_POOL_TIMEOUT` | no | `30` | |
 | `DB_POOL_RECYCLE` | no | `1800` | |
-| `USE_REDIS` | no | `false` | Shared FSM + rate limits |
+| `USE_REDIS` | no | `false` | Shared FSM + rate limits. **Required** if more than one replica. |
 | `REDIS_URL` | if Redis | `redis://localhost:6379/0` | Required when `USE_REDIS=true` |
+| `BOT_REPLICA_COUNT` | no | `1` | If `>1` and `USE_REDIS=false`, startup **fails fast** |
+| `BROADCAST_COOLDOWN_SECONDS` | no | `300` | Min seconds between admin `/broadcast` commands |
 
 ---
 
@@ -128,6 +134,12 @@ Telegram and send `/start`.
 
    The image defaults to `BOT_MODE=webhook`. The HEALTHCHECK probes `/healthz` in
    webhook mode and exits 0 immediately in polling mode.
+
+   HTTP probes (webhook server):
+
+   - `GET /livez` — liveness (process up, no database call)
+   - `GET /healthz` — readiness (`SELECT 1`, cached for a few seconds so the
+     unauthenticated endpoint cannot hammer the pool)
 
 2. Set environment variables on the platform (do **not** commit `.env`):
 
@@ -143,12 +155,17 @@ Telegram and send `/start`.
    | `WEBHOOK_SECRET` | long random string (≥32 chars) |
    | `PORT` | usually set automatically |
    | `LOG_LEVEL` | `INFO` |
-   | `USE_REDIS` / `REDIS_URL` | set if running multiple replicas |
+   | `USE_REDIS` / `REDIS_URL` | **required** if running more than one replica (`BOT_REPLICA_COUNT>1` fails without Redis) |
+   | `BOT_REPLICA_COUNT` | `1` unless you are actually scaling out |
 
 3. Telegram will POST updates to `WEBHOOK_URL` + `WEBHOOK_PATH`.
 
+Webhook mode with `USE_REDIS=false` is only safe for a **single** process. The bot logs a loud WARNING at startup in that configuration.
+
 **Note:** If your host provides `postgres://…` URLs, change the scheme to
 `postgresql+asyncpg://` before setting `DATABASE_URL`.
+
+Production must use **strong unique** `DATABASE_URL` credentials, `WEBHOOK_SECRET`, and Redis auth if Redis is exposed. Never run [`docker-compose.yml`](docker-compose.yml) unmodified on a public host (it publishes Postgres/Redis with default passwords).
 
 ### Database backups
 
@@ -242,3 +259,4 @@ docker-compose.yml
 - The bot validates required settings on startup and fails fast if anything is missing.
 - Only users in `ADMIN_IDS` can add, list, delete, view stats, or read the audit log.
 - Dynamic titles in HTML messages are escaped; video captions use plain text.
+- Production deployments must set strong unique credentials for Postgres, Redis, and `WEBHOOK_SECRET`. The compose defaults (`postgres`/`postgres`) and published ports are for **local development only**.

@@ -4,11 +4,12 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from sqlalchemy import ColumnElement, func, select
+from sqlalchemy import ColumnElement, delete, func, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot.db.models import AdminAuditLog, Movie, User
+from bot.locales import normalize_language
 
 
 async def get_movie_by_code(session: AsyncSession, code: str) -> Movie | None:
@@ -57,14 +58,18 @@ async def upsert_movie(
     return movie
 
 
+def pagination_offset(page: int, per_page: int) -> int:
+    """SQL OFFSET for a 0-based page (never negative)."""
+    return max(0, page) * per_page
+
+
 async def delete_movie(session: AsyncSession, code: str) -> bool:
-    """Delete a movie by code. Returns True if a row was deleted."""
-    movie = await get_movie_by_code(session, code)
-    if movie is None:
-        return False
-    await session.delete(movie)
+    """Atomically delete a movie by code. Returns True if a row was deleted."""
+    stmt = delete(Movie).where(Movie.code == code).returning(Movie.id)
+    result = await session.execute(stmt)
+    deleted = result.first() is not None
     await session.flush()
-    return True
+    return deleted
 
 
 async def list_movies_paginated(
@@ -78,7 +83,7 @@ async def list_movies_paginated(
     result = await session.execute(
         select(Movie, total_col)
         .order_by(Movie.code.asc())
-        .offset(page * per_page)
+        .offset(pagination_offset(page, per_page))
         .limit(per_page)
     )
     rows = result.all()
@@ -103,9 +108,42 @@ async def count_users(session: AsyncSession) -> int:
     return int(result.scalar_one())
 
 
-async def upsert_user_activity(session: AsyncSession, telegram_id: int) -> User:
+async def count_broadcast_recipients(session: AsyncSession) -> int:
+    """Active users eligible for an admin broadcast."""
+    result = await session.execute(
+        select(func.count()).select_from(User).where(User.is_active.is_(True))
+    )
+    return int(result.scalar_one())
+
+
+async def list_broadcast_recipient_ids(session: AsyncSession) -> list[int]:
+    """Telegram IDs of active users (broadcast audience)."""
+    result = await session.execute(
+        select(User.telegram_id).where(User.is_active.is_(True))
+    )
+    return [int(row[0]) for row in result.all()]
+
+
+async def mark_users_inactive(session: AsyncSession, telegram_ids: list[int]) -> None:
+    """Mark users who blocked the bot so later broadcasts skip them."""
+    if not telegram_ids:
+        return
+    await session.execute(
+        update(User)
+        .where(User.telegram_id.in_(telegram_ids))
+        .values(is_active=False)
+    )
+    await session.flush()
+
+
+async def upsert_user_activity(
+    session: AsyncSession,
+    telegram_id: int,
+    telegram_language_code: str | None = None,
+) -> User:
     """Create or update a user on code request (race-safe ON CONFLICT)."""
     now = datetime.now(timezone.utc)
+    language_code = normalize_language(telegram_language_code)
     stmt = (
         insert(User)
         .values(
@@ -113,12 +151,85 @@ async def upsert_user_activity(session: AsyncSession, telegram_id: int) -> User:
             first_seen=now,
             last_active=now,
             request_count=1,
+            language_code=language_code,
         )
         .on_conflict_do_update(
             index_elements=[User.telegram_id],
             set_={
                 "last_active": now,
                 "request_count": User.request_count + 1,
+            },
+        )
+        .returning(User)
+        .execution_options(populate_existing=True)
+    )
+    result = await session.execute(stmt)
+    user = result.scalar_one()
+    await session.flush()
+    return user
+
+
+async def ensure_user(
+    session: AsyncSession,
+    telegram_id: int,
+    telegram_language_code: str | None = None,
+) -> User:
+    """Insert the user on first contact without bumping request_count."""
+    now = datetime.now(timezone.utc)
+    language_code = normalize_language(telegram_language_code)
+    stmt = (
+        insert(User)
+        .values(
+            telegram_id=telegram_id,
+            first_seen=now,
+            last_active=now,
+            request_count=0,
+            language_code=language_code,
+        )
+        .on_conflict_do_update(
+            index_elements=[User.telegram_id],
+            set_={"last_active": now},
+        )
+        .returning(User)
+        .execution_options(populate_existing=True)
+    )
+    result = await session.execute(stmt)
+    user = result.scalar_one()
+    await session.flush()
+    return user
+
+
+async def get_user_language(session: AsyncSession, telegram_id: int) -> str | None:
+    """Return stored language_code, or None if the user has no row yet."""
+    result = await session.execute(
+        select(User.language_code).where(User.telegram_id == telegram_id)
+    )
+    value = result.scalar_one_or_none()
+    return str(value) if value is not None else None
+
+
+async def set_user_language(
+    session: AsyncSession,
+    telegram_id: int,
+    language_code: str,
+) -> User:
+    """Persist an explicit language choice (must already be normalized)."""
+    now = datetime.now(timezone.utc)
+    lang = normalize_language(language_code)
+    stmt = (
+        insert(User)
+        .values(
+            telegram_id=telegram_id,
+            first_seen=now,
+            last_active=now,
+            request_count=0,
+            language_code=lang,
+        )
+        .on_conflict_do_update(
+            index_elements=[User.telegram_id],
+            set_={
+                "last_active": now,
+                "language_code": lang,
             },
         )
         .returning(User)
@@ -161,7 +272,7 @@ async def list_audit_logs_paginated(
     result = await session.execute(
         select(AdminAuditLog, total_col)
         .order_by(AdminAuditLog.timestamp.desc(), AdminAuditLog.id.desc())
-        .offset(page * per_page)
+        .offset(pagination_offset(page, per_page))
         .limit(per_page)
     )
     rows = result.all()

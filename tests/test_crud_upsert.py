@@ -21,7 +21,10 @@ def _db_url() -> str | None:
 async def session():
     url = _db_url()
     if not url:
-        pytest.skip("TEST_DATABASE_URL not set")
+        pytest.skip(
+            "TEST_DATABASE_URL not set — Postgres integration tests "
+            "(CI sets this via the postgres service container)"
+        )
     engine = create_async_engine(url, pool_pre_ping=True)
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
@@ -72,6 +75,32 @@ async def test_upsert_user_activity_increments(session: AsyncSession) -> None:
     assert u2.request_count == 2
 
 
+async def test_ensure_user_sets_language_and_does_not_overwrite(
+    session: AsyncSession,
+) -> None:
+    u1 = await crud.ensure_user(session, 888001, "en")
+    await session.commit()
+    assert u1.language_code == "en"
+    assert u1.request_count == 0
+
+    u2 = await crud.ensure_user(session, 888001, "uz")
+    await session.commit()
+    assert u2.language_code == "en"
+    assert u2.request_count == 0
+
+    u3 = await crud.set_user_language(session, 888001, "uz")
+    await session.commit()
+    assert u3.language_code == "uz"
+
+
+async def test_ensure_user_unsupported_language_falls_back(
+    session: AsyncSession,
+) -> None:
+    u1 = await crud.ensure_user(session, 888002, "fr")
+    await session.commit()
+    assert u1.language_code == "uz"
+
+
 async def test_concurrent_movie_upserts(session: AsyncSession) -> None:
     """Two concurrent first-inserts for the same code must not raise."""
     url = _db_url()
@@ -109,3 +138,19 @@ async def test_list_movies_window_count(session: AsyncSession) -> None:
     page, total = await crud.list_movies_paginated(session, page=0, per_page=2)
     assert total == 3
     assert len(page) == 2
+
+
+async def test_delete_movie_second_call_is_not_found(session: AsyncSession) -> None:
+    await crud.upsert_movie(
+        session,
+        code="301",
+        title="Gone",
+        file_id="file-del",
+        channel_message_id=1,
+        added_by=1,
+    )
+    await session.commit()
+    assert await crud.delete_movie(session, "301") is True
+    await session.commit()
+    assert await crud.delete_movie(session, "301") is False
+    assert await crud.get_movie_by_code(session, "301") is None

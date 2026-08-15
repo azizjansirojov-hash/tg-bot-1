@@ -73,6 +73,45 @@ def test_use_redis_requires_url() -> None:
         Settings(**_base_kwargs(USE_REDIS=True, REDIS_URL=None))  # type: ignore[arg-type]
 
 
+def test_replica_count_requires_redis() -> None:
+    with pytest.raises(ValidationError, match="BOT_REPLICA_COUNT"):
+        Settings(**_base_kwargs(BOT_REPLICA_COUNT=2, USE_REDIS=False))  # type: ignore[arg-type]
+
+
+def test_replica_count_ok_with_redis() -> None:
+    s = Settings(
+        **_base_kwargs(BOT_REPLICA_COUNT=2, USE_REDIS=True, REDIS_URL="redis://localhost:6379/0")
+    )  # type: ignore[arg-type]
+    assert s.bot_replica_count == 2
+    assert s.use_redis is True
+
+
+def test_webhook_url_requires_https() -> None:
+    secret = "a" * WEBHOOK_SECRET_MIN_LENGTH + "-ok-random"
+    s = Settings(
+        **_base_kwargs(
+            BOT_MODE="webhook",
+            WEBHOOK_URL="http://example.com",
+            WEBHOOK_SECRET=secret,
+        )
+    )  # type: ignore[arg-type]
+    with pytest.raises(ValueError, match="https://"):
+        s.validate_webhook_config()
+
+
+def test_webhook_url_https_ok() -> None:
+    secret = "a" * WEBHOOK_SECRET_MIN_LENGTH + "-ok-random"
+    s = Settings(
+        **_base_kwargs(
+            BOT_MODE="webhook",
+            WEBHOOK_URL="https://example.com",
+            WEBHOOK_SECRET=secret,
+        )
+    )  # type: ignore[arg-type]
+    s.validate_webhook_config()
+    assert s.webhook_full_url == "https://example.com/webhook"
+
+
 def test_bot_token_invalid() -> None:
     with pytest.raises(ValidationError, match="BOT_TOKEN"):
         Settings(**_base_kwargs(BOT_TOKEN="short"))  # type: ignore[arg-type]
