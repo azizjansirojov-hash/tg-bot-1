@@ -77,13 +77,14 @@ Checked: on disk, `git log --all --oneline -- <file>`, and `git cat-file -e orig
 | DEBUG-REPORT.md | no | no | no | **Genuinely missing** |
 | DEBUG-STEPTHROUGH-REPORT.md | no | no | no | **Genuinely missing** |
 | MAINT-REPORT.md | yes | `ac2c366` | yes | **Present-and-pushed** |
-| CLEANUP_REPORT.md | yes | `b62aeb5` | no (pre-push) | **Present-but-not-pushed** — fix: push `b62aeb5` |
-| DEBUG_TEST_REPORT.md | yes | `b62aeb5` | no | **Present-but-not-pushed** |
-| DOCKER_STACK_TEST_REPORT.md | yes | `b62aeb5` | no | **Present-but-not-pushed** |
-| FIX_REPORT.md | yes | `b62aeb5` | no | **Present-but-not-pushed** |
-| GITHUB_PUSH_REPORT.md | yes | `b62aeb5` | no | **Present-but-not-pushed** |
-| SECURITY_HARDENING_REPORT.md | yes | `b62aeb5` | no | **Present-but-not-pushed** |
-| UPSERT_FIX_REPORT.md | yes | `b62aeb5` | no | **Present-but-not-pushed** |
+| CLEANUP_REPORT.md | yes | `b62aeb5` | yes (after push) | **Present-and-pushed** |
+| DEBUG_TEST_REPORT.md | yes | `b62aeb5` | yes | **Present-and-pushed** |
+| DOCKER_STACK_TEST_REPORT.md | yes | `b62aeb5` | yes | **Present-and-pushed** |
+| FIX_REPORT.md | yes | `b62aeb5` | yes | **Present-and-pushed** |
+| GITHUB_PUSH_REPORT.md | yes | `b62aeb5` | yes | **Present-and-pushed** |
+| SECURITY_HARDENING_REPORT.md | yes | `b62aeb5` | yes | **Present-and-pushed** |
+| UPSERT_FIX_REPORT.md | yes | `b62aeb5` | yes | **Present-and-pushed** |
+| GITHUB-SYNC-REPORT.md | yes | `4ea9ffb`+ | yes | **Present-and-pushed** |
 
 The FIXES/FEATURES/DEBUG/AUDIT family cannot be reconstructed here; original content is gone.
 
@@ -95,16 +96,22 @@ The FIXES/FEATURES/DEBUG/AUDIT family cannot be reconstructed here; original con
 
 ## ITEM 5 — Push and final confirmation
 
-**Status:** Filled after push (see below).
+**Status:** Pushed and independently cross-checked.
 
-**Finding (pre-push):** Local ahead by `b62aeb5` plus this report commit.
+**Finding (pre-push):** Local was ahead by `b62aeb5` plus `4ea9ffb` (this report).
 
-**Change:** Commit this report; `git push origin main`; `git fetch`; confirm `## main...origin/main` with no ahead/behind; GitHub trees API cross-check; `pytest -v`, `ruff check bot tests`, `mypy bot`.
+**Change:** `git push origin main` → `ac2c366..4ea9ffb  main -> main`. Then `git fetch --all`.
 
-**Verified:** See closing block after those commands.
+**Verified:**
+
+- `git status -sb`: `## main...origin/main` (no ahead/behind).
+- GitHub API `https://api.github.com/repos/azizjansirojov-hash/tg-bot-1/git/trees/main?recursive=1`: `truncated=false`, **80 blobs**, exact match vs `git ls-tree -r --name-only HEAD`. Markdown on GitHub: the seven restored reports, `MAINT-REPORT.md`, `GITHUB-SYNC-REPORT.md`, `README.md`. No `AUDIT.md` / `FIXES.md` / `FEATURES.md` / `DEBUG-REPORT.md` family.
+- `pytest -v`: 84 passed, 7 skipped (CRUD tests need `TEST_DATABASE_URL`).
+- `ruff check bot tests`: All checks passed.
+- `mypy bot`: Success: no issues found in 35 source files.
 
 ---
 
-## Closing verification (post-push)
+## Verdict
 
-_Placeholder — updated in the same working pass after push and checks._
+Local and GitHub (`origin/main`) are fully in sync as of commit `4ea9ffb`, with no secrets in git history; the seven restored reports plus `MAINT-REPORT.md` and this file are on `origin/main`. Unresolved: `AUDIT.md`, `FIXES.md`, `FIXES-FOLLOWUP.md`, `FIXES-MINOR.md`, `FEATURES.md`, `FEATURES-FOLLOWUP.md`, `DEBUG-REPORT.md`, and `DEBUG-STEPTHROUGH-REPORT.md` were never in this repository and cannot be reconstructed here. Local `.env` holds a live-looking bot token, is gitignored, and was never committed — rotate `BOT_TOKEN` if this environment may have leaked it outside git.
