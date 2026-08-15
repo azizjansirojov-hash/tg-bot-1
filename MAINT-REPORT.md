@@ -2,7 +2,7 @@
 
 ## Conclusions
 
-(a) Prior named audit/feature docs (`FIXES.md`, `FEATURES.md`, `DEBUG-REPORT.md` and follow-ups) were never in git; the large uncommitted working tree from later sessions is now committed, and this report records whether that commit was pushed.
+(a) Prior named audit/feature docs (`FIXES.md`, `FEATURES.md`, `DEBUG-REPORT.md` and follow-ups) were never in git; the large uncommitted working tree is now committed as `ee33dc8` and pushed to `origin/main`.
 
 (b) The local environment now matches the lockfile at `aiohttp==3.14.3`, and `pip-audit -r requirements.txt` reported no known vulnerabilities.
 
@@ -38,11 +38,7 @@
 
 **Verified:** `git log --all --oneline -- FIXES.md FEATURES.md DEBUG-REPORT.md` empty; `.gitignore` has no `*.md` rule; `git status` / `git log --oneline -20` recorded at investigation.
 
-**Push:** Remote is `https://github.com/azizjansirojov-hash/tg-bot-1.git`. If this environment cannot reach GitHub, run:
-
-```bash
-git push origin main
-```
+**Push:** Remote `https://github.com/azizjansirojov-hash/tg-bot-1.git`. Commit `ee33dc8` was pushed: `bc3fc28..ee33dc8  main -> main`. `git status -sb` after push: `## main...origin/main`.
 
 ---
 
