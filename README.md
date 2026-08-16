@@ -14,7 +14,7 @@ pydantic-settings. Optional Redis for multi-replica FSM + rate limits.
 
 - `/start` welcome + numeric code lookup → `send_video` (plain-text captions)
 - `/help` (role-aware) and Telegram `/` command menu via `set_my_commands`
-- `/language` — Uzbek (default) or English, stored per user
+- `/language` — Uzbek (default), Russian, or English, stored per user
 - Friendly guidance for non-numeric messages
 - Dual-layer per-user rate limiting (code lookup + global ceiling) plus `/broadcast` cooldown
 - Admin flow: forward a video from the storage channel → FSM asks for code & title
@@ -214,7 +214,8 @@ channel; the bot only stores a `file_id` and a code.
 | `/delete_code 102` | Delete a code (asks Yes/No first) |
 | `/stats` | Total movies + unique requesting users |
 | `/auditlog` | Paginated admin mutation audit log |
-| `/cancel` | Abort the add-movie conversation mid-flow |
+| `/broadcast` | Text-only broadcast to active users (cooldown applies) |
+| `/cancel` | Abort add-movie or broadcast conversation mid-flow |
 
 ---
 
@@ -238,17 +239,31 @@ bot/
   config.py            # pydantic-settings
   handlers/            # Telegram interaction
   db/                  # models + crud
-  middlewares/         # DB session + rate limit
+  locales/             # uz / ru / en strings
+  middlewares/         # DB session, locale, rate limit
   filters/             # IsAdmin
-  states/              # FSM for add-movie
+  states/              # FSM for add-movie + broadcast
   keyboards/           # inline keyboards
-  services/            # safe Telegram API wrappers
+  services/            # safe Telegram API wrappers + broadcast
 alembic/               # migrations
-scripts/               # manual ops SQL
+tests/                 # pytest suite
+scripts/               # manual ops SQL (e.g. audit-log cleanup)
+.github/workflows/     # CI (pytest, ruff, mypy, pip-audit)
 Dockerfile
 docker-compose.yml
 .env.example
 ```
+
+---
+
+## CI
+
+GitHub Actions (`.github/workflows/ci.yml`) runs on every push and pull request:
+
+- **test** — pytest with Postgres 16 + Redis 7 service containers
+- **lint** — `ruff check bot tests`
+- **typecheck** — `mypy bot`
+- **pip-audit** — fail on known vulnerable dependencies in `requirements.txt`
 
 ---
 
@@ -257,6 +272,6 @@ docker-compose.yml
 - Never commit `.env` or real tokens.
 - All secrets load from environment variables via pydantic-settings.
 - The bot validates required settings on startup and fails fast if anything is missing.
-- Only users in `ADMIN_IDS` can add, list, delete, view stats, or read the audit log.
+- Only users in `ADMIN_IDS` can add, list, delete, view stats, read the audit log, or broadcast.
 - Dynamic titles in HTML messages are escaped; video captions use plain text.
 - Production deployments must set strong unique credentials for Postgres, Redis, and `WEBHOOK_SECRET`. The compose defaults (`postgres`/`postgres`) and published ports are for **local development only**.
