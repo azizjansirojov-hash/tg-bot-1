@@ -5,7 +5,7 @@
 **Branch:** `main`  
 **Functional tip (locales + LOAD_TEST_REPORT + README):** `bb382ee8447a3116548472f746cceb9a703289a9`  
 **FINAL_SYNC_REPORT introduced:** `0429882e1b41bf1a104185d154c69bea82a21830`  
-**Verified tip (this file’s hash/CI fill):** `4fe5ddc0aaf222730b874162442ddf75848df361`  
+**Verified tip at report close:** `52a9b8b45fe5d0a99e621eb44ad478c62100739f`  
 
 ---
 
@@ -164,6 +164,7 @@ All three of `bot/locales/{en,ru,uz}.py` use identical `BTN_LANG_*` values:
 | CI #11 | `bb382ee` | **Success** | https://github.com/azizjansirojov-hash/tg-bot-1/actions/runs/31971445330 |
 | CI (report add) | `0429882` | **Success** | https://github.com/azizjansirojov-hash/tg-bot-1/actions/runs/31971648022 |
 | CI (report hash fill) | `4fe5ddc` | **Success** | https://github.com/azizjansirojov-hash/tg-bot-1/actions/runs/31971741125 |
+| CI (verdict → 4fe5ddc) | `52a9b8b` | **Success** | https://github.com/azizjansirojov-hash/tg-bot-1/actions/runs/31971845457 |
 
 Actions index: https://github.com/azizjansirojov-hash/tg-bot-1/actions  
 
@@ -190,4 +191,4 @@ Annotations on #11: Node.js 20 deprecation warnings on `actions/checkout@v4` / `
 
 ## 7. Final statement
 
-This repository is fully and verifiably synced with GitHub as of commit `4fe5ddc0aaf222730b874162442ddf75848df361`, all CI checks passing, no secrets in history, no orphaned local-only files.
+This repository is fully and verifiably synced with GitHub as of commit `52a9b8b45fe5d0a99e621eb44ad478c62100739f`, all CI checks passing, no secrets in history, no orphaned local-only files.
