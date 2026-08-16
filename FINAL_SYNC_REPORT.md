@@ -4,7 +4,7 @@
 **Remote:** `https://github.com/azizjansirojov-hash/tg-bot-1`  
 **Branch:** `main`  
 **Functional tip (locales + LOAD_TEST_REPORT + README):** `bb382ee8447a3116548472f746cceb9a703289a9`  
-**This report commit:** _(filled after commit)_  
+**This report commit:** `0429882e1b41bf1a104185d154c69bea82a21830`  
 
 ---
 
@@ -161,14 +161,13 @@ All three of `bot/locales/{en,ru,uz}.py` use identical `BTN_LANG_*` values:
 | Run | Commit | Result | Link |
 |-----|--------|--------|------|
 | CI #11 | `bb382ee` | **Success** | https://github.com/azizjansirojov-hash/tg-bot-1/actions/runs/31971445330 |
+| CI (report) | `0429882` | **Success** | https://github.com/azizjansirojov-hash/tg-bot-1/actions/runs/31971648022 |
 
 Actions index: https://github.com/azizjansirojov-hash/tg-bot-1/actions  
 
 Annotations on #11: Node.js 20 deprecation warnings on `actions/checkout@v4` / `setup-python@v5` only (not failures).
 
 `gh` CLI not available in this environment; API returned 403 without auth. Status confirmed via Actions HTML.
-
-_(CI for this report commit filled after push.)_
 
 ---
 
@@ -189,4 +188,4 @@ _(CI for this report commit filled after push.)_
 
 ## 7. Final statement
 
-This repository is fully and verifiably synced with GitHub as of commit `bb382ee8447a3116548472f746cceb9a703289a9`, all CI checks passing (run [31971445330](https://github.com/azizjansirojov-hash/tg-bot-1/actions/runs/31971445330)), no secrets in history, no orphaned local-only files. This `FINAL_SYNC_REPORT.md` is a docs-only follow-up on top of that tip; its own CI result is recorded below after push.
+This repository is fully and verifiably synced with GitHub as of commit `0429882e1b41bf1a104185d154c69bea82a21830`, all CI checks passing, no secrets in history, no orphaned local-only files.
