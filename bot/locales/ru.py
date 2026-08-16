@@ -46,9 +46,9 @@ class Texts(_BaseTexts):
     START_LANGUAGE_PROMPT = (
         "Tilni tanlang / Выберите язык / Choose a language:"
     )
-    BTN_LANG_UZ = "O‘zbekcha"
-    BTN_LANG_RU = "Русский"
-    BTN_LANG_EN = "English"
+    BTN_LANG_UZ = "🇺🇿 O‘zbekcha"
+    BTN_LANG_RU = "🇷🇺 Русский"
+    BTN_LANG_EN = "🇬🇧 English"
 
     ADMIN_VIDEO_RECEIVED = (
         "Видео получено из канала-хранилища.\n\n"

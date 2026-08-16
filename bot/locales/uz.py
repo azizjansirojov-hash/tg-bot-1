@@ -53,9 +53,9 @@ class Texts:
     START_LANGUAGE_PROMPT = (
         "Tilni tanlang / Выберите язык / Choose a language:"
     )
-    BTN_LANG_UZ = "O‘zbekcha"
-    BTN_LANG_RU = "Русский"
-    BTN_LANG_EN = "English"
+    BTN_LANG_UZ = "🇺🇿 O‘zbekcha"
+    BTN_LANG_RU = "🇷🇺 Русский"
+    BTN_LANG_EN = "🇬🇧 English"
 
     # --- Admin: add-movie FSM ---
     ADMIN_VIDEO_RECEIVED = (
